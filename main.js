@@ -336,7 +336,7 @@ function drawGraph(data, containerId, title) {
  */
 function saveToLocalStorage() {
     const formData = {};
-    const inputs = form.querySelectorAll("input");
+    const inputs = form.querySelectorAll("input, select");
 
     inputs.forEach(input => {
         if (input.type === "checkbox") {
@@ -453,7 +453,7 @@ function saveCurrentScenario() {
 
     // Get current form data
     const formData = {};
-    const inputs = form.querySelectorAll("input");
+    const inputs = form.querySelectorAll("input, select");
 
     inputs.forEach(input => {
         if (input.type === "checkbox") {
@@ -684,7 +684,18 @@ function compareSelectedScenarios() {
         { key: "totalCurrentInvestments", label: "Current Investments" },
         { key: "annualInvestmentAppreciation", label: "Investment Return Rate (%)" },
         { key: "monthlyInvestmentContribution", label: "Monthly Investment Contribution" },
-        { key: "includeDownPayment", label: "Include Down Payment in Investments" }
+        { key: "includeDownPayment", label: "Include Down Payment in Investments" },
+        { key: "filingStatus", label: "Tax Filing Status" },
+        { key: "stateIncomeTaxRate", label: "State Income Tax Rate (%)" },
+        { key: "itemizeDeductions", label: "Itemize Deductions" },
+        { key: "otherDeductions", label: "Other Annual Deductions" },
+        { key: "preMedicareMonthlyPremium", label: "Pre-Medicare Monthly Premium" },
+        { key: "preMedicareAnnualOutOfPocket", label: "Pre-Medicare Annual Out-of-Pocket" },
+        { key: "medicarePartBPremium", label: "Medicare Part B Premium" },
+        { key: "medigapPremium", label: "Medigap Premium" },
+        { key: "medicareAnnualOutOfPocket", label: "Medicare Annual Out-of-Pocket" },
+        { key: "includeLongTermCare", label: "Include Long-Term Care Insurance" },
+        { key: "longTermCarePremium", label: "Long-Term Care Premium" }
     ];
 
     // Add rows for each parameter
@@ -700,17 +711,21 @@ function compareSelectedScenarios() {
             const value = scenario.formData[param.key];
 
             // Format the value
-            if (param.key === "includeDownPayment") {
+            if (param.key === "includeDownPayment" || param.key === "itemizeDeductions" || param.key === "includeLongTermCare") {
                 valueCell.textContent = value ? "Yes" : "No";
+            } else if (param.key === "filingStatus") {
+                valueCell.textContent = value === "joint" ? "Married Filing Jointly" : "Single";
             } else if (typeof value === "number" || !isNaN(value)) {
                 const numValue = Number(value);
                 if (param.key.includes("Rate") || param.key.includes("Increase") || param.key === "inflation") {
                     valueCell.textContent = numValue + "%";
-                } else if (param.key.includes("monthly") || param.key.includes("Monthly") ||
+                } else if (param.key.includes("Premium") || param.key.includes("Pocket") ||
+                           param.key.includes("monthly") || param.key.includes("Monthly") ||
                            param.key.includes("annual") || param.key.includes("Annual") ||
                            param.key.includes("mortgage") || param.key.includes("Mortgage") ||
                            param.key.includes("Down") || param.key.includes("Investment") ||
                            param.key.includes("Repair") || param.key.includes("Tax") ||
+                           param.key.includes("Deduction") ||
                            param.key.includes("Security")) {
                     valueCell.textContent = formatter.format(numValue);
                 } else {

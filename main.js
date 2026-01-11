@@ -2,6 +2,7 @@ import { readForm, calculateTotalCosts, calculateCumulativeAssets, calculateNetP
 import { House, Apartment } from './modules/housing.js';
 import { LivingExpenses } from './modules/living.js';
 import { NonTaxableInvestment } from './modules/investments.js';
+import { ScenarioManager } from './modules/scenarios.js';
 
 // Global variables
 let comparativeTotalCostsTable = null;
@@ -39,11 +40,23 @@ window.onload = function() {
     document.getElementById("exportCsvBtn").addEventListener("click", exportToCSV);
     document.getElementById("clearDataBtn").addEventListener("click", clearSavedData);
 
+    // Set up scenario management buttons
+    document.getElementById("saveScenarioBtn").addEventListener("click", saveCurrentScenario);
+    document.getElementById("loadScenarioBtn").addEventListener("click", loadSelectedScenario);
+    document.getElementById("deleteScenarioBtn").addEventListener("click", deleteSelectedScenario);
+    document.getElementById("savedScenarios").addEventListener("change", handleScenarioSelectionChange);
+    document.getElementById("showComparisonBtn").addEventListener("click", showScenarioComparison);
+    document.getElementById("closeComparisonBtn").addEventListener("click", closeScenarioComparison);
+    document.getElementById("compareBtn").addEventListener("click", compareSelectedScenarios);
+
     // Add custom form validation
     form.addEventListener("submit", validateForm);
 
     // Load saved data from localStorage
     loadFromLocalStorage();
+
+    // Load and populate saved scenarios dropdown
+    populateScenariosDropdown();
 }
 
 /**
@@ -347,6 +360,357 @@ function clearSavedData() {
         form.reset();
         alert("Saved data cleared successfully!");
     }
+}
+
+/**
+ * Populates the scenarios dropdown with saved scenarios
+ */
+function populateScenariosDropdown() {
+    const scenarios = ScenarioManager.getAllScenarios();
+    const dropdown = document.getElementById("savedScenarios");
+    const compareBtn = document.getElementById("showComparisonBtn");
+
+    // Clear existing options
+    dropdown.innerHTML = "";
+
+    if (scenarios.length === 0) {
+        dropdown.innerHTML = '<option value="">-- No saved scenarios --</option>';
+        compareBtn.disabled = true;
+        return;
+    }
+
+    // Add default option
+    dropdown.innerHTML = '<option value="">-- Select a scenario --</option>';
+
+    // Add each scenario
+    scenarios.forEach(scenario => {
+        const option = document.createElement("option");
+        option.value = scenario.id;
+        option.textContent = `${scenario.name} (${new Date(scenario.updatedAt).toLocaleDateString()})`;
+        dropdown.appendChild(option);
+    });
+
+    // Enable comparison button if there are 2+ scenarios
+    compareBtn.disabled = scenarios.length < 2;
+}
+
+/**
+ * Handles scenario selection change in dropdown
+ */
+function handleScenarioSelectionChange() {
+    const dropdown = document.getElementById("savedScenarios");
+    const loadBtn = document.getElementById("loadScenarioBtn");
+    const deleteBtn = document.getElementById("deleteScenarioBtn");
+
+    if (dropdown.value) {
+        loadBtn.disabled = false;
+        deleteBtn.disabled = false;
+
+        // Load scenario details into name and notes fields
+        const scenario = ScenarioManager.getScenarioById(dropdown.value);
+        if (scenario) {
+            document.getElementById("scenarioName").value = scenario.name;
+            document.getElementById("scenarioNotes").value = scenario.notes || "";
+        }
+    } else {
+        loadBtn.disabled = true;
+        deleteBtn.disabled = true;
+    }
+}
+
+/**
+ * Saves the current form state as a scenario
+ */
+function saveCurrentScenario() {
+    const name = document.getElementById("scenarioName").value.trim();
+    const notes = document.getElementById("scenarioNotes").value.trim();
+
+    if (!name) {
+        alert("Please enter a scenario name before saving.");
+        document.getElementById("scenarioName").focus();
+        return;
+    }
+
+    // Get current form data
+    const formData = {};
+    const inputs = form.querySelectorAll("input");
+
+    inputs.forEach(input => {
+        if (input.type === "checkbox") {
+            formData[input.id] = input.checked;
+        } else {
+            formData[input.id] = input.value;
+        }
+    });
+
+    try {
+        ScenarioManager.saveScenario(name, notes, formData);
+        alert(`Scenario "${name}" saved successfully!`);
+
+        // Clear the scenario name and notes fields
+        document.getElementById("scenarioName").value = "";
+        document.getElementById("scenarioNotes").value = "";
+
+        // Refresh the dropdown
+        populateScenariosDropdown();
+    } catch (error) {
+        alert("Error saving scenario: " + error.message);
+    }
+}
+
+/**
+ * Loads the selected scenario into the form
+ */
+function loadSelectedScenario() {
+    const dropdown = document.getElementById("savedScenarios");
+    const scenarioId = dropdown.value;
+
+    if (!scenarioId) {
+        alert("Please select a scenario to load.");
+        return;
+    }
+
+    const scenario = ScenarioManager.getScenarioById(scenarioId);
+
+    if (!scenario) {
+        alert("Scenario not found.");
+        return;
+    }
+
+    // Load form data
+    Object.keys(scenario.formData).forEach(key => {
+        const input = document.getElementById(key);
+        if (input) {
+            if (input.type === "checkbox") {
+                input.checked = scenario.formData[key];
+            } else {
+                input.value = scenario.formData[key];
+            }
+        }
+    });
+
+    // Update name and notes fields
+    document.getElementById("scenarioName").value = scenario.name;
+    document.getElementById("scenarioNotes").value = scenario.notes || "";
+
+    alert(`Scenario "${scenario.name}" loaded successfully!`);
+}
+
+/**
+ * Deletes the selected scenario
+ */
+function deleteSelectedScenario() {
+    const dropdown = document.getElementById("savedScenarios");
+    const scenarioId = dropdown.value;
+
+    if (!scenarioId) {
+        alert("Please select a scenario to delete.");
+        return;
+    }
+
+    const scenario = ScenarioManager.getScenarioById(scenarioId);
+
+    if (!scenario) {
+        alert("Scenario not found.");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete the scenario "${scenario.name}"?`)) {
+        return;
+    }
+
+    try {
+        ScenarioManager.deleteScenario(scenarioId);
+        alert(`Scenario "${scenario.name}" deleted successfully!`);
+
+        // Clear the scenario name and notes fields
+        document.getElementById("scenarioName").value = "";
+        document.getElementById("scenarioNotes").value = "";
+
+        // Refresh the dropdown
+        populateScenariosDropdown();
+    } catch (error) {
+        alert("Error deleting scenario: " + error.message);
+    }
+}
+
+/**
+ * Shows the scenario comparison section
+ */
+function showScenarioComparison() {
+    const scenarios = ScenarioManager.getAllScenarios();
+
+    if (scenarios.length < 2) {
+        alert("You need at least 2 saved scenarios to compare.");
+        return;
+    }
+
+    // Show the comparison section
+    const comparisonSection = document.getElementById("scenarioComparisonSection");
+    comparisonSection.style.display = "block";
+
+    // Populate checkboxes
+    const checkboxContainer = document.getElementById("comparisonCheckboxes");
+    checkboxContainer.innerHTML = "";
+
+    scenarios.forEach(scenario => {
+        const col = document.createElement("div");
+        col.className = "col-sm-12 col-md-6 col-lg-4 mb-2";
+
+        const formCheck = document.createElement("div");
+        formCheck.className = "form-check";
+
+        const checkbox = document.createElement("input");
+        checkbox.className = "form-check-input scenario-compare-checkbox";
+        checkbox.type = "checkbox";
+        checkbox.value = scenario.id;
+        checkbox.id = `compare_${scenario.id}`;
+        checkbox.addEventListener("change", updateCompareButton);
+
+        const label = document.createElement("label");
+        label.className = "form-check-label";
+        label.htmlFor = `compare_${scenario.id}`;
+        label.textContent = scenario.name;
+
+        formCheck.appendChild(checkbox);
+        formCheck.appendChild(label);
+        col.appendChild(formCheck);
+        checkboxContainer.appendChild(col);
+    });
+
+    // Scroll to the comparison section
+    comparisonSection.scrollIntoView({ behavior: "smooth" });
+}
+
+/**
+ * Closes the scenario comparison section
+ */
+function closeScenarioComparison() {
+    const comparisonSection = document.getElementById("scenarioComparisonSection");
+    comparisonSection.style.display = "none";
+
+    // Clear checkboxes
+    const checkboxes = document.querySelectorAll(".scenario-compare-checkbox");
+    checkboxes.forEach(cb => cb.checked = false);
+
+    // Hide results
+    document.getElementById("comparisonResults").style.display = "none";
+
+    // Scroll back to top of form
+    document.querySelector("#detailsForm").scrollIntoView({ behavior: "smooth" });
+}
+
+/**
+ * Updates the compare button based on selected scenarios
+ */
+function updateCompareButton() {
+    const checkboxes = document.querySelectorAll(".scenario-compare-checkbox:checked");
+    const compareBtn = document.getElementById("compareBtn");
+
+    compareBtn.disabled = checkboxes.length < 2 || checkboxes.length > 3;
+}
+
+/**
+ * Compares selected scenarios and displays results
+ */
+function compareSelectedScenarios() {
+    const checkboxes = document.querySelectorAll(".scenario-compare-checkbox:checked");
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (selectedIds.length < 2 || selectedIds.length > 3) {
+        alert("Please select 2 or 3 scenarios to compare.");
+        return;
+    }
+
+    const scenarios = selectedIds.map(id => ScenarioManager.getScenarioById(id));
+
+    // Build comparison table
+    const table = document.getElementById("comparisonTable");
+    const thead = table.querySelector("thead tr");
+    const tbody = table.querySelector("tbody");
+
+    // Clear existing content
+    thead.innerHTML = "<th>Parameter</th>";
+    tbody.innerHTML = "";
+
+    // Add scenario names as column headers
+    scenarios.forEach(scenario => {
+        const th = document.createElement("th");
+        th.textContent = scenario.name;
+        thead.appendChild(th);
+    });
+
+    // Define parameters to compare with friendly names
+    const parameters = [
+        { key: "currentAge", label: "Current Age" },
+        { key: "retirementAge", label: "Retirement Age" },
+        { key: "deathAge", label: "Life Expectancy" },
+        { key: "inflation", label: "Inflation Rate (%)" },
+        { key: "socialSecurity", label: "Social Security ($/month)" },
+        { key: "otherRetirementIncome", label: "Other Retirement Income ($/month)" },
+        { key: "currentMonthlyLivingExpenses", label: "Current Monthly Living Expenses" },
+        { key: "retirementMonthlyLivingExpenses", label: "Retirement Monthly Living Expenses" },
+        { key: "monthlyRent", label: "Monthly Rent" },
+        { key: "monthlyRentInsurance", label: "Monthly Rent Insurance" },
+        { key: "rentIncrease", label: "Rent Increase Rate (%)" },
+        { key: "mortgage", label: "Mortgage Amount" },
+        { key: "mortgageDownPayment", label: "Down Payment" },
+        { key: "mortgageRate", label: "Mortgage Rate (%)" },
+        { key: "annualTaxAssessment", label: "Annual Property Tax" },
+        { key: "monthlyHomeInsurance", label: "Monthly Home Insurance" },
+        { key: "annualHomeValueAppreciation", label: "Home Appreciation Rate (%)" },
+        { key: "oneTimeRepairs", label: "One-Time Repairs" },
+        { key: "annualHomeMaintenance", label: "Annual Home Maintenance" },
+        { key: "totalCurrentInvestments", label: "Current Investments" },
+        { key: "annualInvestmentAppreciation", label: "Investment Return Rate (%)" },
+        { key: "monthlyInvestmentContribution", label: "Monthly Investment Contribution" },
+        { key: "includeDownPayment", label: "Include Down Payment in Investments" }
+    ];
+
+    // Add rows for each parameter
+    parameters.forEach(param => {
+        const row = document.createElement("tr");
+
+        const labelCell = document.createElement("td");
+        labelCell.innerHTML = `<strong>${param.label}</strong>`;
+        row.appendChild(labelCell);
+
+        scenarios.forEach(scenario => {
+            const valueCell = document.createElement("td");
+            const value = scenario.formData[param.key];
+
+            // Format the value
+            if (param.key === "includeDownPayment") {
+                valueCell.textContent = value ? "Yes" : "No";
+            } else if (typeof value === "number" || !isNaN(value)) {
+                const numValue = Number(value);
+                if (param.key.includes("Rate") || param.key.includes("Increase") || param.key === "inflation") {
+                    valueCell.textContent = numValue + "%";
+                } else if (param.key.includes("monthly") || param.key.includes("Monthly") ||
+                           param.key.includes("annual") || param.key.includes("Annual") ||
+                           param.key.includes("mortgage") || param.key.includes("Mortgage") ||
+                           param.key.includes("Down") || param.key.includes("Investment") ||
+                           param.key.includes("Repair") || param.key.includes("Tax") ||
+                           param.key.includes("Security")) {
+                    valueCell.textContent = formatter.format(numValue);
+                } else {
+                    valueCell.textContent = numValue;
+                }
+            } else {
+                valueCell.textContent = value || "-";
+            }
+
+            row.appendChild(valueCell);
+        });
+
+        tbody.appendChild(row);
+    });
+
+    // Show the results
+    document.getElementById("comparisonResults").style.display = "block";
+
+    // Scroll to results
+    document.getElementById("comparisonResults").scrollIntoView({ behavior: "smooth" });
 }
 
 /**

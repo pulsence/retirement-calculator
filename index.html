@@ -251,6 +251,36 @@
                             </div>
                         </div>
 
+                        <hr class="my-4">
+
+                        <h4>Scenario Management</h4>
+                        <div class="mb-3">
+                            <label for="scenarioName" class="form-label">Scenario Name</label>
+                            <input type="text" class="form-control" id="scenarioName" placeholder="e.g., Conservative Estimate, High Growth, etc." maxlength="50">
+                            <small class="form-text text-muted">Give this scenario a memorable name</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="scenarioNotes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="scenarioNotes" rows="2" placeholder="Add any notes about this scenario..." maxlength="200"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="savedScenarios" class="form-label">Saved Scenarios</label>
+                            <select class="form-select" id="savedScenarios">
+                                <option value="">-- No saved scenarios --</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-success" id="saveScenarioBtn">Save Current Scenario</button>
+                            <button type="button" class="btn btn-info" id="loadScenarioBtn" disabled>Load Selected Scenario</button>
+                            <button type="button" class="btn btn-warning" id="deleteScenarioBtn" disabled>Delete Selected Scenario</button>
+                            <button type="button" class="btn btn-outline-primary" id="showComparisonBtn" disabled>Compare Scenarios</button>
+                        </div>
+
+                        <hr class="my-4">
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">Calculate</button>
                             <button type="button" class="btn btn-secondary" id="exportCsvBtn">Export to CSV</button>
@@ -259,6 +289,42 @@
                     </div>
                 </form>
             </div>
+            <hr/>
+
+            <!-- Scenario Comparison Section -->
+            <div class="row mb-4" id="scenarioComparisonSection" style="display: none;">
+                <div class="col-12">
+                    <h2 class="text-center">Scenario Comparison</h2>
+                    <p class="text-center text-muted">Compare input parameters across different saved scenarios</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Select scenarios to compare (select 2-3):</label>
+                        <div id="comparisonCheckboxes" class="row">
+                            <!-- Checkboxes will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-primary" id="compareBtn" disabled>Compare Selected Scenarios</button>
+                        <button type="button" class="btn btn-secondary" id="closeComparisonBtn">Close Comparison</button>
+                    </div>
+
+                    <div id="comparisonResults" class="table-responsive" style="display: none;">
+                        <table class="table table-bordered table-hover" id="comparisonTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Parameter</th>
+                                    <!-- Scenario names will be added dynamically -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Comparison data will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <hr/>
             <div class="row">
                 <h2 class="text-center">Data Tables</h2>

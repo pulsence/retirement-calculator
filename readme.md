@@ -27,7 +27,7 @@ A comprehensive financial planning tool to compare renting vs. buying scenarios 
 ## Getting Started
 
 ### Online Access
-Visit [https://pulsence.github.io/retirment-calculator/](https://pulsence.github.io/retirment-calculator/) to use the calculator immediately.
+Visit [https://pulsence.github.io/retirement-calculator/](https://pulsence.github.io/retirement-calculator/) to use the calculator immediately.
 
 ### Local Installation
 1. Download the project:

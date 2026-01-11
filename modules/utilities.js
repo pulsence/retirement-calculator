@@ -94,6 +94,52 @@ class InvestingInformation {
 }
 
 /**
+ * Information about tax configuration
+ */
+class TaxInformation {
+    /**
+     * @param {string} filingStatus - 'single' or 'joint'
+     * @param {number} stateIncomeTaxRate - State income tax rate (as decimal)
+     * @param {boolean} itemizeDeductions - Whether to itemize deductions
+     * @param {number} otherDeductions - Other annual deductions
+     */
+    constructor(filingStatus = 'single', stateIncomeTaxRate = 0,
+                itemizeDeductions = false, otherDeductions = 0) {
+        this.filingStatus = filingStatus;
+        this.stateIncomeTaxRate = stateIncomeTaxRate;
+        this.itemizeDeductions = itemizeDeductions;
+        this.otherDeductions = otherDeductions;
+    }
+}
+
+/**
+ * Information about healthcare costs
+ */
+class HealthcareInformation {
+    /**
+     * @param {number} preMedicareMonthlyPremium - Monthly premium before Medicare
+     * @param {number} preMedicareAnnualOutOfPocket - Annual out-of-pocket before Medicare
+     * @param {number} medicarePartBPremium - Medicare Part B premium
+     * @param {number} medigapPremium - Medigap/supplemental premium
+     * @param {number} medicareAnnualOutOfPocket - Annual out-of-pocket with Medicare
+     * @param {boolean} includeLongTermCare - Whether to include long-term care insurance
+     * @param {number} longTermCarePremium - Long-term care premium
+     */
+    constructor(preMedicareMonthlyPremium = 800, preMedicareAnnualOutOfPocket = 3000,
+                medicarePartBPremium = 174.70, medigapPremium = 200,
+                medicareAnnualOutOfPocket = 2000, includeLongTermCare = false,
+                longTermCarePremium = 250) {
+        this.preMedicareMonthlyPremium = preMedicareMonthlyPremium;
+        this.preMedicareAnnualOutOfPocket = preMedicareAnnualOutOfPocket;
+        this.medicarePartBPremium = medicarePartBPremium;
+        this.medigapPremium = medigapPremium;
+        this.medicareAnnualOutOfPocket = medicareAnnualOutOfPocket;
+        this.includeLongTermCare = includeLongTermCare;
+        this.longTermCarePremium = longTermCarePremium;
+    }
+}
+
+/**
  * Container for all form information
  */
 class FormInformation {
@@ -102,12 +148,17 @@ class FormInformation {
      * @param {RentingInformation} rentingInformation
      * @param {BuyingInformation} buyingInformation
      * @param {InvestingInformation} investingInformation
+     * @param {TaxInformation} taxInformation
+     * @param {HealthcareInformation} healthcareInformation
      */
-    constructor(generalInformation, rentingInformation, buyingInformation, investingInformation) {
+    constructor(generalInformation, rentingInformation, buyingInformation, investingInformation,
+                taxInformation, healthcareInformation) {
         this.generalInformation = generalInformation;
         this.rentingInformation = rentingInformation;
         this.buyingInformation = buyingInformation;
         this.investingInformation = investingInformation;
+        this.taxInformation = taxInformation;
+        this.healthcareInformation = healthcareInformation;
     }
 }
 
@@ -149,23 +200,43 @@ function readForm() {
     investingInformation.monthlyInvestmentContribution = Number(document.getElementById("monthlyInvestmentContribution").value);
     investingInformation.annualInvestmentAppreciation = Number(document.getElementById("annualInvestmentAppreciation").value) / 100;
 
-    return new FormInformation(generalInformation, rentingInformation, buyingInformation, investingInformation);
+    const taxInformation = new TaxInformation();
+    taxInformation.filingStatus = document.getElementById("filingStatus").value;
+    taxInformation.stateIncomeTaxRate = Number(document.getElementById("stateIncomeTaxRate").value) / 100;
+    taxInformation.itemizeDeductions = document.getElementById("itemizeDeductions").checked;
+    taxInformation.otherDeductions = Number(document.getElementById("otherDeductions").value);
+
+    const healthcareInformation = new HealthcareInformation();
+    healthcareInformation.preMedicareMonthlyPremium = Number(document.getElementById("preMedicareMonthlyPremium").value);
+    healthcareInformation.preMedicareAnnualOutOfPocket = Number(document.getElementById("preMedicareAnnualOutOfPocket").value);
+    healthcareInformation.medicarePartBPremium = Number(document.getElementById("medicarePartBPremium").value);
+    healthcareInformation.medigapPremium = Number(document.getElementById("medigapPremium").value);
+    healthcareInformation.medicareAnnualOutOfPocket = Number(document.getElementById("medicareAnnualOutOfPocket").value);
+    healthcareInformation.includeLongTermCare = document.getElementById("includeLongTermCare").checked;
+    healthcareInformation.longTermCarePremium = Number(document.getElementById("longTermCarePremium").value);
+
+    return new FormInformation(generalInformation, rentingInformation, buyingInformation, investingInformation,
+                              taxInformation, healthcareInformation);
 }
 
 /**
- * Calculates total costs (housing + living expenses) for each year across all scenarios
+ * Calculates total costs (housing + living expenses + healthcare) for each year across all scenarios
  * @param {Array} housing - Array of housing objects (rental and house scenarios)
  * @param {LivingExpenses} livingExpenses - Living expenses object
+ * @param {HealthcareCosts} healthcare - Healthcare costs object (optional)
  * @returns {Array} Array of [age, [costs for each scenario]]
  */
-function calculateTotalCosts(housing, livingExpenses) {
+function calculateTotalCosts(housing, livingExpenses, healthcare = null) {
     const years = housing[0].housingData.length;
     const totalCosts = [];
 
     for (let i = 0; i < years; i++) {
         const values = [];
+        const healthcareCost = healthcare ? healthcare.healthcareData[i].annualCost : 0;
         for (let j = 0; j < housing.length; j++) {
-            values.push(housing[j].housingData[i].totalCosts + livingExpenses.expensesData[i].totalCosts);
+            values.push(housing[j].housingData[i].totalCosts +
+                       livingExpenses.expensesData[i].totalCosts +
+                       healthcareCost);
         }
         totalCosts.push([housing[0].housingData[i].age, values]);
     }
@@ -202,18 +273,21 @@ function calculateCumulativeAssets(investments, housing) {
  * @param {Array} cumulativeAssets - Cumulative asset values
  * @param {Array} housing - Housing costs
  * @param {LivingExpenses} livingExpenses - Living expenses
+ * @param {HealthcareCosts} healthcare - Healthcare costs object (optional)
  * @returns {Array} Array of [age, [net positions for each scenario]]
  */
-function calculateNetPositions(cumulativeAssets, housing, livingExpenses) {
+function calculateNetPositions(cumulativeAssets, housing, livingExpenses, healthcare = null) {
     const years = cumulativeAssets.length;
     const netPositions = [];
 
     for (let i = 0; i < years; i++) {
         const values = [];
+        const healthcareCost = healthcare ? healthcare.healthcareData[i].annualCost : 0;
         for (let j = 0; j < cumulativeAssets[i][1].length; j++) {
             values.push(cumulativeAssets[i][1][j] -
                             housing[j].housingData[i].totalCosts -
-                            livingExpenses.expensesData[i].totalCosts);
+                            livingExpenses.expensesData[i].totalCosts -
+                            healthcareCost);
         }
         netPositions.push([cumulativeAssets[i][0], values]);
     }

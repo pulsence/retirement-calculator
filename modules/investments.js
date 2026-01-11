@@ -109,12 +109,14 @@ class NonTaxableInvestment extends GenericInvestment {
      * FIXED: Each scenario now maintains its own separate value instead of sharing currentValue
      * @param {Array} housingCosts - Array of housing objects
      * @param {LivingExpenses} livingExpenses - Living expenses object
+     * @param {HealthcareCosts} healthcare - Healthcare costs object (optional)
      */
-    calculateData(housingCosts, livingExpenses) {
+    calculateData(housingCosts, livingExpenses, healthcare = null) {
         const years = this.generalInformation.lifeExpectancy - this.generalInformation.startAge;
 
         for (let i = 0; i < years; i++) {
             const values = [];
+            const healthcareCost = healthcare ? healthcare.healthcareData[i].annualCost : 0;
 
             for (let j = 0; j < housingCosts.length; j++){
                 let currentValue;
@@ -125,7 +127,8 @@ class NonTaxableInvestment extends GenericInvestment {
                 } else {
                     // Post-retirement: withdraw to cover expenses not covered by income
                     const uncoveredLivingCosts = housingCosts[j].housingData[i].yearlyCosts +
-                                                livingExpenses.expensesData[i].yearlySpending  -
+                                                livingExpenses.expensesData[i].yearlySpending +
+                                                healthcareCost -
                                                 this.generalInformation.socialSecurity * 12 -
                                                 this.generalInformation.otherRetirementIncome * 12;
                     const withdrawals = (uncoveredLivingCosts > 0 ? -uncoveredLivingCosts : 0);

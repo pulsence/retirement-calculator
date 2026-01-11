@@ -287,6 +287,108 @@
                             <button type="button" class="btn btn-outline-secondary" id="clearDataBtn">Clear Saved Data</button>
                         </div>
                     </div>
+
+                    <!-- Tax Configuration Section -->
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Tax Configuration</h3>
+                        <div class="mb-3">
+                            <label for="filingStatus" class="form-label">Filing Status</label>
+                            <select class="form-select" id="filingStatus">
+                                <option value="single">Single</option>
+                                <option value="joint">Married Filing Jointly</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stateIncomeTaxRate" class="form-label">State Income Tax Rate</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="stateIncomeTaxRate" value="5" min="0" max="15" step="0.1">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="form-text text-muted">Enter your state's income tax rate (0 for states with no income tax)</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="itemizeDeductions" class="form-check-input">
+                            <label for="itemizeDeductions" class="form-check-label">Itemize Deductions</label>
+                            <small class="form-text text-muted">Check if you plan to itemize (vs. standard deduction)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="otherDeductions" class="form-label">Other Annual Deductions</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="otherDeductions" value="0" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">Charitable contributions, medical expenses, etc.</small>
+                        </div>
+                    </div>
+
+                    <!-- Healthcare Configuration Section -->
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Healthcare Costs</h3>
+                        <h6 class="text-muted">Pre-Medicare (Before Age 65)</h6>
+
+                        <div class="mb-3">
+                            <label for="preMedicareMonthlyPremium" class="form-label">Monthly Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="preMedicareMonthlyPremium" value="800" min="0" step="50">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="preMedicareAnnualOutOfPocket" class="form-label">Annual Out-of-Pocket</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="preMedicareAnnualOutOfPocket" value="3000" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">Deductibles, copays, prescriptions</small>
+                        </div>
+
+                        <h6 class="text-muted mt-3">Medicare (Age 65+)</h6>
+
+                        <div class="mb-3">
+                            <label for="medicarePartBPremium" class="form-label">Medicare Part B Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medicarePartBPremium" value="174.70" min="0" step="1">
+                            </div>
+                            <small class="form-text text-muted">Monthly, 2024 standard: $174.70</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="medigapPremium" class="form-label">Medigap/Supplemental Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medigapPremium" value="200" min="0" step="10">
+                            </div>
+                            <small class="form-text text-muted">Monthly supplemental insurance</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="medicareAnnualOutOfPocket" class="form-label">Annual Out-of-Pocket</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medicareAnnualOutOfPocket" value="2000" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">With Medicare coverage</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="includeLongTermCare" class="form-check-input">
+                            <label for="includeLongTermCare" class="form-check-label">Include Long-Term Care Insurance</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="longTermCarePremium" class="form-label">Long-Term Care Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="longTermCarePremium" value="250" min="0" step="10">
+                            </div>
+                            <small class="form-text text-muted">Monthly, if enabled</small>
+                        </div>
+                    </div>
                 </form>
             </div>
             <hr/>

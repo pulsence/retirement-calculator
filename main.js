@@ -3,6 +3,8 @@ import { House, Apartment } from './modules/housing.js';
 import { LivingExpenses } from './modules/living.js';
 import { NonTaxableInvestment } from './modules/investments.js';
 import { ScenarioManager } from './modules/scenarios.js';
+import { TaxConfig, TaxCalculator } from './modules/taxes.js';
+import { HealthcareConfig, HealthcareCosts } from './modules/healthcare.js';
 
 // Global variables
 let comparativeTotalCostsTable = null;
@@ -112,6 +114,8 @@ function calc(){
     const rentingInformation = formInformation.rentingInformation;
     const buyingInformation = formInformation.buyingInformation;
     const investingInformation = formInformation.investingInformation;
+    const taxInformation = formInformation.taxInformation;
+    const healthcareInformation = formInformation.healthcareInformation;
 
     // Make available globally for utilities.js
     window.generalInformation = generalInformation;
@@ -147,15 +151,31 @@ function calc(){
     const livingExpenses = new LivingExpenses(generalInformation);
     livingExpenses.calculateData();
 
+    // Calculate healthcare costs
+    const healthcareConfig = new HealthcareConfig(
+        healthcareInformation.preMedicareMonthlyPremium,
+        0, // deductible not separately tracked
+        healthcareInformation.preMedicareAnnualOutOfPocket,
+        healthcareInformation.medicarePartBPremium,
+        55, // Medicare Part D - using default
+        healthcareInformation.medigapPremium,
+        healthcareInformation.medicareAnnualOutOfPocket,
+        healthcareInformation.includeLongTermCare,
+        healthcareInformation.longTermCarePremium,
+        60 // Default long-term care start age
+    );
+    const healthcare = new HealthcareCosts(generalInformation, healthcareConfig);
+    healthcare.calculateData();
+
     // Calculate investments
     const investments = new NonTaxableInvestment(generalInformation, initialInvestment,
                                             investingInformation.annualInvestmentAppreciation,
                                             investingInformation.monthlyInvestmentContribution);
-    investments.calculateData([rental, house15, house30], livingExpenses);
+    investments.calculateData([rental, house15, house30], livingExpenses, healthcare);
 
-    const totalCosts = calculateTotalCosts([rental, house15, house30], livingExpenses);
+    const totalCosts = calculateTotalCosts([rental, house15, house30], livingExpenses, healthcare);
     const assetValues = calculateCumulativeAssets([investments], [rental, house15, house30]);
-    const netValues = calculateNetPositions(assetValues, [rental, house15, house30], livingExpenses);
+    const netValues = calculateNetPositions(assetValues, [rental, house15, house30], livingExpenses, healthcare);
 
     updateTables([investments], [rental, house15, house30], livingExpenses, assetValues, netValues,
                     comparativeTotalCostsTable, perMonthCostsTable,

@@ -19,6 +19,8 @@ A comprehensive financial planning tool to compare renting vs. buying scenarios 
 
 ### User Experience
 - **Data Persistence**: Form inputs automatically save to browser localStorage
+- **Scenario Management**: Save, load, and compare multiple what-if scenarios
+- **Scenario Comparison**: Side-by-side comparison of input parameters across 2-3 scenarios
 - **CSV Export**: Download all calculation results for further analysis
 - **Input Validation**: Comprehensive validation prevents calculation errors
 - **Mobile Responsive**: Works seamlessly on phones, tablets, and desktops
@@ -48,6 +50,33 @@ Visit [https://pulsence.github.io/retirement-calculator/](https://pulsence.githu
 6. **Configure Investments**: Enter current investment balance, contribution amounts, and expected returns
 7. **Calculate**: Click "Calculate" to see results in tables and graphs
 8. **Export**: Use "Export to CSV" to download results for further analysis
+
+## Scenario Management
+
+The calculator includes powerful scenario management features to help you explore different financial strategies:
+
+### Saving Scenarios
+1. Fill in your inputs and give your scenario a name (e.g., "Conservative", "Optimistic", "Aggressive Growth")
+2. Optionally add notes to describe assumptions or important details
+3. Click "Save Current Scenario" to store it in your browser
+4. Your scenarios are saved separately from the auto-saved form data
+
+### Loading Scenarios
+1. Select a saved scenario from the dropdown
+2. Click "Load Selected Scenario" to populate the form with those values
+3. The scenario name and notes will also be loaded for reference
+
+### Comparing Scenarios
+1. Click "Compare Scenarios" button (enabled when you have 2+ saved scenarios)
+2. Select 2 or 3 scenarios you want to compare
+3. Click "Compare Selected Scenarios" to see a detailed side-by-side comparison
+4. The comparison table shows all input parameters across your selected scenarios
+5. Review differences to understand how varying assumptions affect your planning
+
+### Managing Scenarios
+- **Delete**: Select a scenario and click "Delete Selected Scenario" to remove it
+- **Update**: Save a scenario with the same name to update it with new values
+- **Privacy**: All scenarios are stored locally in your browser's localStorage
 
 ## Calculation Assumptions
 
@@ -83,7 +112,8 @@ The calculator makes the following assumptions (detailed in the UI):
 │   ├── utilities.js        # Form handling and calculation utilities
 │   ├── housing.js          # Housing cost calculations
 │   ├── living.js           # Living expense calculations
-│   └── investments.js      # Investment growth/withdrawal calculations
+│   ├── investments.js      # Investment growth/withdrawal calculations
+│   └── scenarios.js        # Scenario management and comparison
 ├── assets/
 │   ├── bootstrap/          # Bootstrap CSS and JS
 │   └── d3/                 # D3.js visualization library

@@ -111,7 +111,7 @@ Tested in: Chrome, Firefox, Safari, Edge
 
 ## Limitations & Disclaimers
 
-⚠️ **This calculator is for educational purposes only and should not be considered financial advice.**
+**This calculator is for educational purposes only and should not be considered financial advice.**
 
 - Calculations are simplified models and may not reflect all real-world factors
 - Tax implications are not fully considered
@@ -120,22 +120,8 @@ Tested in: Chrome, Firefox, Safari, Edge
 
 ## Contributing
 
-This is a personal project, but suggestions and improvements are welcome. Feel free to fork and customize for your own needs.
+This is a personal project. Feel free to fork and customize for your own needs.
 
 ## License
 
 This project is available for personal use. No warranty or financial guarantee is provided.
-
-## Recent Updates
-
-### Latest Version (v3)
-- ✅ Fixed mortgage amortization calculations for accuracy
-- ✅ Fixed investment calculation bug across scenarios
-- ✅ Added CSV export functionality
-- ✅ Added localStorage persistence
-- ✅ Improved mobile responsiveness
-- ✅ Added comprehensive input validation
-- ✅ Converted to ES6 modules
-- ✅ Added JSDoc documentation throughout
-- ✅ Fixed numerous typos and UI issues
-- ✅ Refactored duplicate code for maintainability

@@ -1,4 +1,4 @@
-import { readForm, calculateTotalCosts, calculateCumulativeAssets, calculateNetPositions, updateTables } from './modules/utilities.js';
+import { readForm, calculateTotalCosts, calculateCumulativeAssets, calculateNetPositions, updateTables, GeneralInformation, RentingInformation, BuyingInformation, InvestingInformation } from './modules/utilities.js';
 import { House, Apartment } from './modules/housing.js';
 import { LivingExpenses } from './modules/living.js';
 import { NonTaxableInvestment } from './modules/investments.js';
@@ -631,6 +631,319 @@ function updateCompareButton() {
 }
 
 /**
+ * Runs a complete simulation for a given scenario
+ * Returns all calculation results (housing, living, investments, healthcare, etc.)
+ * @param {Object} scenario - Scenario object with formData
+ * @returns {Object} Simulation results
+ */
+function runSimulationForScenario(scenario) {
+    const formData = scenario.formData;
+
+    // Create GeneralInformation from formData
+    const generalInformation = new GeneralInformation(
+        Number(formData.currentAge),
+        Number(formData.retirementAge),
+        Number(formData.deathAge),
+        Number(formData.averageInflation) / 100,
+        Number(formData.monthlySocialSecurity),
+        Number(formData.otherMonthlyRetirementSources),
+        Number(formData.currentMonthlySpending),
+        Number(formData.expectedMonthlySpendingInRetirement)
+    );
+
+    // Create RentingInformation
+    const rentingInformation = new RentingInformation(
+        Number(formData.monthlyRent),
+        Number(formData.rentIncrease) / 100,
+        Number(formData.monthlyRentInsurance)
+    );
+
+    // Create BuyingInformation
+    const buyingInformation = new BuyingInformation(
+        Number(formData.mortgage),
+        Number(formData.mortgageDownPayment),
+        Number(formData.mortgage) + Number(formData.mortgageDownPayment),
+        Number(formData.mortgageRate) / 100,
+        Number(formData.oneTimeRepairs),
+        Number(formData.annualTaxAssessment),
+        Number(formData.monthlyHomeInsurance),
+        Number(formData.annualHomeMaintenance),
+        Number(formData.annualHomeValueAppreciation) / 100
+    );
+
+    // Create InvestingInformation
+    const investingInformation = new InvestingInformation(
+        Number(formData.totalCurrentInvestments),
+        formData.includeDownPayment === true || formData.includeDownPayment === "true",
+        Number(formData.monthlyInvestmentContribution),
+        Number(formData.annualInvestmentAppreciation) / 100
+    );
+
+    // Create rental scenario
+    const rental = new Apartment(generalInformation, rentingInformation.monthlyRentInsurance, 0,
+                            rentingInformation.monthlyRent, rentingInformation.rentIncrease);
+    rental.calculateData();
+
+    // Calculate initial investment amount (with down payment if selected)
+    let initialInvestment = investingInformation.totalCurrentInvestments;
+    if (investingInformation.includeDownPayment) {
+        initialInvestment += buyingInformation.mortgageDownPayment;
+    }
+
+    // Create 15-year mortgage scenario
+    const house15 = new House(generalInformation, buyingInformation.monthlyHomeInsurance, 0,
+                        buyingInformation.mortgage, buyingInformation.mortgageDownPayment,
+                        buyingInformation.mortgageRate, 15, buyingInformation.annualTaxAssessment,
+                        buyingInformation.annualHomeValueAppreciation, buyingInformation.oneTimeRepairs,
+                        buyingInformation.annualHomeMaintenance);
+    house15.calculateData();
+
+    // Create 30-year mortgage scenario
+    const house30 = new House(generalInformation, buyingInformation.monthlyHomeInsurance, 0,
+                        buyingInformation.mortgage, buyingInformation.mortgageDownPayment,
+                        buyingInformation.mortgageRate, 30, buyingInformation.annualTaxAssessment,
+                        buyingInformation.annualHomeValueAppreciation, buyingInformation.oneTimeRepairs,
+                        buyingInformation.annualHomeMaintenance);
+    house30.calculateData();
+
+    // Calculate living expenses
+    const livingExpenses = new LivingExpenses(generalInformation);
+    livingExpenses.calculateData();
+
+    // Calculate healthcare costs
+    const healthcareConfig = new HealthcareConfig(
+        Number(formData.preMedicareMonthlyPremium),
+        0, // deductible not separately tracked
+        Number(formData.preMedicareAnnualOutOfPocket),
+        Number(formData.medicarePartBPremium),
+        55, // Medicare Part D - using default
+        Number(formData.medigapPremium),
+        Number(formData.medicareAnnualOutOfPocket),
+        formData.includeLongTermCare === true || formData.includeLongTermCare === "true",
+        Number(formData.longTermCarePremium),
+        60 // Default long-term care start age
+    );
+    const healthcare = new HealthcareCosts(generalInformation, healthcareConfig);
+    healthcare.calculateData();
+
+    // Calculate investments
+    const investments = new NonTaxableInvestment(generalInformation, initialInvestment,
+                                            investingInformation.annualInvestmentAppreciation,
+                                            investingInformation.monthlyInvestmentContribution);
+    investments.calculateData([rental, house15, house30], livingExpenses, healthcare);
+
+    // Calculate totals
+    const totalCosts = calculateTotalCosts([rental, house15, house30], livingExpenses, healthcare);
+    const assetValues = calculateCumulativeAssets([investments], [rental, house15, house30]);
+    const netValues = calculateNetPositions(assetValues, [rental, house15, house30], livingExpenses, healthcare);
+
+    return {
+        scenarioName: scenario.name,
+        rental,
+        house15,
+        house30,
+        livingExpenses,
+        healthcare,
+        investments,
+        totalCosts,
+        assetValues,
+        netValues
+    };
+}
+
+/**
+ * Displays comparison results in tabbed interface
+ * @param {Array} scenarios - Array of scenario objects
+ * @param {Array} simulationResults - Array of simulation result objects
+ */
+function displayComparisonResults(scenarios, simulationResults) {
+    const resultsSection = document.getElementById("comparisonResultsSection");
+    const tabNav = document.getElementById("comparisonTabs");
+    const tabContent = document.getElementById("comparisonTabContent");
+
+    // Clear existing content
+    tabNav.innerHTML = "";
+    tabContent.innerHTML = "";
+
+    // Create tab for each scenario
+    simulationResults.forEach((result, index) => {
+        const tabId = `scenario${index}Tab`;
+        const isActive = index === 0 ? "active" : "";
+        const isShow = index === 0 ? "show" : "";
+
+        // Create tab navigation item
+        const navItem = document.createElement("li");
+        navItem.className = "nav-item";
+        navItem.setAttribute("role", "presentation");
+        navItem.innerHTML = `
+            <button class="nav-link ${isActive}" id="tab-${tabId}" data-bs-toggle="tab"
+                    data-bs-target="#${tabId}" type="button" role="tab">
+                ${result.scenarioName}
+            </button>
+        `;
+        tabNav.appendChild(navItem);
+
+        // Create tab content pane with all 6 data tables
+        const tabPane = document.createElement("div");
+        tabPane.className = `tab-pane fade ${isShow} ${isActive}`;
+        tabPane.id = tabId;
+        tabPane.setAttribute("role", "tabpanel");
+
+        tabPane.innerHTML = generateScenarioTabContent(result);
+        tabContent.appendChild(tabPane);
+    });
+
+    // Create final comparison tab
+    const compTabId = "comparisonTab";
+    const navItem = document.createElement("li");
+    navItem.className = "nav-item";
+    navItem.setAttribute("role", "presentation");
+    navItem.innerHTML = `
+        <button class="nav-link" id="tab-${compTabId}" data-bs-toggle="tab"
+                data-bs-target="#${compTabId}" type="button" role="tab">
+            <strong>Comparison</strong>
+        </button>
+    `;
+    tabNav.appendChild(navItem);
+
+    const tabPane = document.createElement("div");
+    tabPane.className = "tab-pane fade";
+    tabPane.id = compTabId;
+    tabPane.setAttribute("role", "tabpanel");
+    tabPane.innerHTML = generateComparisonTab(scenarios, simulationResults);
+    tabContent.appendChild(tabPane);
+
+    // Show results section
+    resultsSection.style.display = "block";
+    resultsSection.scrollIntoView({ behavior: "smooth" });
+}
+
+/**
+ * Generates the content for a scenario's results tab
+ * @param {Object} result - Simulation result object
+ * @returns {string} HTML content
+ */
+function generateScenarioTabContent(result) {
+    let html = `<h4 class="mt-3 mb-4">${result.scenarioName} - Results</h4>`;
+
+    // Create a simplified version with just the net positions (most important metric)
+    html += `
+        <div class="table-responsive">
+            <h5>Net Positions (Assets - Total Costs)</h5>
+            <table class="table table-bordered table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Age</th>
+                        <th>Rent</th>
+                        <th>15 Yr Loan</th>
+                        <th>30 Yr Loan</th>
+                        <th>Best Option</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    // Add rows for each age
+    const years = result.netValues.length;
+    const sampleFrequency = Math.max(1, Math.floor(years / 20)); // Show ~20 rows max
+
+    for (let i = 0; i < years; i += sampleFrequency) {
+        const age = result.netValues[i][0];
+        const rentValue = result.netValues[i][1][0];
+        const house15Value = result.netValues[i][1][1];
+        const house30Value = result.netValues[i][1][2];
+
+        const maxValue = Math.max(rentValue, house15Value, house30Value);
+        let bestOption = "";
+        if (rentValue === maxValue) bestOption = "Rent";
+        else if (house15Value === maxValue) bestOption = "15 Yr";
+        else bestOption = "30 Yr";
+
+        html += `<tr>
+            <td>${age}</td>
+            <td class="${rentValue < 0 ? 'table-danger' : ''}">${formatter.format(rentValue)}</td>
+            <td class="${house15Value < 0 ? 'table-danger' : ''}">${formatter.format(house15Value)}</td>
+            <td class="${house30Value < 0 ? 'table-danger' : ''}">${formatter.format(house30Value)}</td>
+            <td class="table-success"><strong>${bestOption}</strong></td>
+        </tr>`;
+    }
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    return html;
+}
+
+/**
+ * Generates the final comparison tab showing which scenario is ahead
+ * @param {Array} scenarios - Array of scenario objects
+ * @param {Array} simulationResults - Array of simulation results
+ * @returns {string} HTML content
+ */
+function generateComparisonTab(scenarios, simulationResults) {
+    let html = `
+        <h4 class="mt-3">Head-to-Head Comparison</h4>
+        <p>Comparing net positions (cumulative assets - cumulative costs) across all scenarios and housing options</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Age</th>
+    `;
+
+    // Add column headers for each scenario × housing option
+    simulationResults.forEach(result => {
+        html += `<th>${result.scenarioName} - Rent</th>`;
+        html += `<th>${result.scenarioName} - 15yr</th>`;
+        html += `<th>${result.scenarioName} - 30yr</th>`;
+    });
+    html += `<th>Best Option</th></tr></thead><tbody>`;
+
+    // Add rows for each age (sample to keep table manageable)
+    const years = simulationResults[0].netValues.length;
+    const sampleFrequency = Math.max(1, Math.floor(years / 20)); // Show ~20 rows max
+
+    for (let i = 0; i < years; i += sampleFrequency) {
+        const age = simulationResults[0].netValues[i][0];
+        html += `<tr><td><strong>${age}</strong></td>`;
+
+        let bestValue = -Infinity;
+        let bestOption = "";
+
+        simulationResults.forEach(result => {
+            const rentValue = result.netValues[i][1][0];
+            const house15Value = result.netValues[i][1][1];
+            const house30Value = result.netValues[i][1][2];
+
+            html += `<td class="${rentValue < 0 ? 'table-danger' : ''}">${formatter.format(rentValue)}</td>`;
+            html += `<td class="${house15Value < 0 ? 'table-danger' : ''}">${formatter.format(house15Value)}</td>`;
+            html += `<td class="${house30Value < 0 ? 'table-danger' : ''}">${formatter.format(house30Value)}</td>`;
+
+            if (rentValue > bestValue) {
+                bestValue = rentValue;
+                bestOption = `${result.scenarioName} - Rent`;
+            }
+            if (house15Value > bestValue) {
+                bestValue = house15Value;
+                bestOption = `${result.scenarioName} - 15yr`;
+            }
+            if (house30Value > bestValue) {
+                bestValue = house30Value;
+                bestOption = `${result.scenarioName} - 30yr`;
+            }
+        });
+
+        html += `<td class="table-success"><strong>${bestOption}</strong></td></tr>`;
+    }
+
+    html += `</tbody></table></div>`;
+    return html;
+}
+
+/**
  * Compares selected scenarios and displays results
  */
 function compareSelectedScenarios() {
@@ -741,8 +1054,16 @@ function compareSelectedScenarios() {
         tbody.appendChild(row);
     });
 
-    // Show the results
+    // Show the input parameter comparison
     document.getElementById("comparisonResults").style.display = "block";
+
+    // Run simulations for each scenario
+    const simulationResults = scenarios.map(scenario => {
+        return runSimulationForScenario(scenario);
+    });
+
+    // Display simulation results in tabbed interface
+    displayComparisonResults(scenarios, simulationResults);
 
     // Scroll to results
     document.getElementById("comparisonResults").scrollIntoView({ behavior: "smooth" });

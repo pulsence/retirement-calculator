@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+            <!-- Bootstrap 5.0.2 -->
+        <link href="assets/bootstrap/bootstrap.css" rel="stylesheet">
+
+        <script type="module" src="./modules/utilities.js"></script>
+        <script type="module" src="./modules/housing.js"></script>
+        <script type="module" src="./modules/living.js"></script>
+        <script type="module" src="./modules/investments.js"></script>
+        <script type="module" src="main.js?v=3"></script>
+
+        <title>Retirement Calculator</title>
+    </head>
+    <body>
+        <div class="container-xl">
+            <div class="row">
+                <h1 class="text-center">Retirement Calculator</h1>
+            </div>
+            <hr/>
+            <div class="row">
+                <h2 class="text-center">Introduction</h2>
+                <p>
+                    This calculator is designed to help you determine the financial implications of renting vs buying a home as you approach retirement.
+                    By inputting your personal financial details and housing options, the calculator will provide a comparative analysis of the total costs, investment growth,
+                    and net positions for both scenarios over time.
+                </p>
+
+                <p class="mb-0">
+                    Assumptions used in these calculations:
+                </p>
+                <ol style="padding-left: 4rem;">
+                    <li>All costs are adjusted for inflation based on the average inflation rate you provide.</li>
+                    <li>Social security and other retirement income sources are NOT inflation adjusted.</li>
+                    <li>Tax rates and contributions (outside of that assessed upon a home) do not factor into the calculations.</li>
+                    <li>Values shown are calculated for what they would be at the end of the year.</li>
+                    <li>Values are shown in nominal values, they are not inflation corrected.</li>
+                </ol>
+
+                <p>
+                    As a general rule when interpreting the results, if the Investment Value is positive, you still have money in the bank. If it is negative, but your Cumulative Asset Value is positive,
+                    you have equity in your home, but no money in the bank. If both are negative, you are in debt. Net Positions is an indicator of how efficient different scenarios are at building intergenerational wealth (i.e., inheritance).
+                </p>
+
+                <p>
+                    Please note that this calculator is intended for educational purposes only and should not be considered as financial advice.
+                    It is recommended to consult with a financial advisor for personalized guidance based on your specific situation. All information collected is stored locally in your browser and not transmitted to any server.
+                </p>
+            </div>
+            <hr/>
+            <div class="row">
+                <h2 class="text-center">Starting Information</h2>
+                <form class="row" id="detailsForm">
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>General Information</h3>
+                        <div class="mb-3">
+                            <label for="currentAge" class="form-label">Current Age</label>
+                            <input type="number" class="form-control" id="currentAge" aria-describedby="currentAgeHelp" value="60" min="18" max="100" required>
+                            <div class="invalid-feedback">Please enter a valid age between 18 and 100.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="retirementAge" class="form-label">Retirement Age</label>
+                            <input type="number" class="form-control" id="retirementAge" aria-describedby="retirementAgeHelp" value="70" min="18" max="100" required>
+                            <div class="invalid-feedback">Retirement age must be greater than current age.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deathAge" class="form-label">Death Age</label>
+                            <input type="number" class="form-control" id="deathAge" aria-describedby="deathAge" value="95" min="18" max="120" required>
+                            <div class="invalid-feedback">Death age must be greater than retirement age.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="averageInflation" class="form-label">Average Inflation</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="averageInflation" aria-describedby="averageInflationHelp averageInflationAddon" value="3" min="0" max="50" step="0.1" required>
+                                <span class="input-group-text" id="averageInflationAddon">%</span>
+                            </div>
+                            <div id="averageInflationHelp" class="form-text">What do you expect the average inflation to be until retirement? 3% is a safe assumption.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="monthlySocialSecurity" class="form-label">Monthly Social Security</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="monthlySocialSecurityAddon">$</span>
+                                <input type="number" class="form-control" id="monthlySocialSecurity" aria-describedby="monthlySocialSecurityHelp monthlySocialSecurityAddon" value="2000" min="0" step="1">
+                            </div>
+                            <div id="monthlySocialSecurityHelp" class="form-text">What do you expect to receive monthly from social security?</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="otherMonthlyRetirementSources" class="form-label">Other Monthly Retirement Income Sources</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="otherMonthlyRetirementSourcesAddon">$</span>
+                                <input type="number" class="form-control" id="otherMonthlyRetirementSources" aria-describedby="otherMonthlyRetirementSourcesHelp otherMonthlyRetirementSourcesAddon" value="0" min="0" step="1">
+                            </div>
+                            <div id="otherMonthlyRetirementSourcesHelp" class="form-text">Do you expect to have other sources of monthly income during retirement? (E.g., annuities, pensions, etc.)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="currentMonthlySpending" class="form-label">Current Monthly Spending</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="currentMonthlySpendingAddon">$</span>
+                                <input type="number" class="form-control" id="currentMonthlySpending" aria-describedby="currentMonthlySpendingHelp currentMonthlySpendingAddon" value="2000" min="0" step="1" required>
+                            </div>
+                            <div id="currentMonthlySpendingHelp" class="form-text">What is your total average monthly expenditures excluding housing?</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="expectedMonthlySpendingInRetirement" class="form-label">Expected Monthly Spending in Retirement</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="expectedMonthlySpendingInRetirementAddon">$</span>
+                                <input type="number" class="form-control" id="expectedMonthlySpendingInRetirement" aria-describedby="expectedMonthlySpendingInRetirementHelp expectedMonthlySpendingInRetirementAddon" value="2000" min="0" step="1" required>
+                            </div>
+                            <div id="expectedMonthlySpendingInRetirementHelp" class="form-text">What do you expect your monthly expenditures to be during retirement? If you are not sure use the same value as your current spending.</div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Renting Information</h3>
+                        <div class="mb-3">
+                            <label for="monthlyRent" class="form-label">Monthly Rent</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="monthlyRentAddon">$</span>
+                                <input type="number" class="form-control" id="monthlyRent" aria-describedby="monthlyRentHelp monthlyRentAddon" value="2000" min="0" step="1" required>
+                            </div>
+                            <div id="monthlyRentHelp" class="form-text">Insert your monthly rent.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rentIncrease" class="form-label">Rent Increase</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="rentIncrease" aria-describedby="rentIncreaseHelp rentIncreaseAddon" value="3" min="0" max="50" step="0.1" required>
+                                <span class="input-group-text" id="rentIncreaseAddon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="monthlyRentInsurance" class="form-label">Monthly Rental Insurance</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="monthlyRentInsuranceAddon">$</span>
+                                <input type="number" class="form-control" id="monthlyRentInsurance" aria-describedby="monthlyRentInsuranceHelp monthlyRentInsuranceAddon" value="10" min="0" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Buying Information</h3>
+                        <div class="mb-3">
+                            <label for="mortgage" class="form-label">Mortgage</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="mortgageAddon">$</span>
+                                <input type="number" class="form-control" id="mortgage" aria-describedby="mortgageHelp mortgageAddon" value="300000" min="0" step="1000" required>
+                            </div>
+                            <div id="mortgageHelp" class="form-text">Insert your mortgage excluding down payment.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mortgageDownPayment" class="form-label">Mortgage Down Payment</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="mortgageDownPaymentAddon">$</span>
+                                <input type="number" class="form-control" id="mortgageDownPayment" aria-describedby="mortgageDownPaymentHelp mortgageDownPaymentAddon" value="20000" min="0" step="1000" required>
+                            </div>
+                            <div id="mortgageDownPaymentHelp" class="form-text">Insert your down payment.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mortgageRate" class="form-label">Mortgage Rate</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="mortgageRate" aria-describedby="mortgageRateHelp mortgageRateAddon" value="6" min="0" max="30" step="0.01" required>
+                                <span class="input-group-text" id="mortgageRateAddon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="oneTimeRepairs" class="form-label">One Time Repairs</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="oneTimeRepairsAddon">$</span>
+                                <input type="number" class="form-control" id="oneTimeRepairs" aria-describedby="oneTimeRepairsHelp oneTimeRepairsAddon" value="10000" min="0" step="100">
+                            </div>
+                            <div id="oneTimeRepairsHelp" class="form-text">How much do you expect the initial repairs of the home to cost.</div>
+                        </div>
+
+                        <div class="mb-3">
+                        <label for="annualTaxAssessment" class="form-label">Annual Tax Assessment</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="annualTaxAssessmentAddon">$</span>
+                                <input type="number" class="form-control" id="annualTaxAssessment" aria-describedby="annualTaxAssessmentHelp annualTaxAssessmentAddon" value="2000" min="0" step="100" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="monthlyHomeInsurance" class="form-label">Monthly Home Insurance</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="monthlyHomeInsuranceAddon">$</span>
+                                <input type="number" class="form-control" id="monthlyHomeInsurance" aria-describedby="monthlyHomeInsuranceHelp monthlyHomeInsuranceAddon" value="100" min="0" step="10" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="annualHomeMaintenance" class="form-label">Annual Home Maintenance</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="annualHomeMaintenanceAddon">$</span>
+                                <input type="number" class="form-control" id="annualHomeMaintenance" aria-describedby="annualHomeMaintenanceHelp annualHomeMaintenanceAddon" value="7500" min="0" step="100">
+                            </div>
+                            <div id="annualHomeMaintenanceHelp" class="form-text">Around 5% of home value is a decent estimate.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="annualHomeValueAppreciation" class="form-label">Annual Home Value Appreciation</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="annualHomeValueAppreciation" aria-describedby="annualHomeValueAppreciationHelp annualHomeValueAppreciationAddon" value="6" min="-50" max="50" step="0.1" required>
+                                <span class="input-group-text" id="annualHomeValueAppreciationAddon">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Investments Information</h3>
+                        <div class="mb-3">
+                            <label for="totalCurrentInvestments" class="form-label">Total Current Investments</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="totalCurrentInvestmentsAddon">$</span>
+                                <input type="number" class="form-control" id="totalCurrentInvestments" aria-describedby="totalCurrentInvestmentsHelp totalCurrentInvestmentsAddon" value="100000" min="0" step="1000" required>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="includeDownPayment" class="form-check-input" aria-describedby="includeDownPaymentHelp">
+                            <label for="includeDownPayment" class="form-check-label">Include Down Payment</label>
+                            <div id="includeDownPaymentHelp" class="form-text">Check if you would like to include the theoretical down payment above as part of your investment total.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="annualInvestmentAppreciation" class="form-label">Annual Investments Appreciation</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="annualInvestmentAppreciation" aria-describedby="annualInvestmentAppreciationHelp annualInvestmentAppreciationAddon" value="6" min="-50" max="50" step="0.1" required>
+                                <span class="input-group-text" id="annualInvestmentAppreciationAddon">%</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="monthlyInvestmentContribution" class="form-label">Monthly Investment Contribution</label>
+                            <div class="input-group">
+                                <span class="input-group-text" id="monthlyInvestmentContributionAddon">$</span>
+                                <input type="number" class="form-control" id="monthlyInvestmentContribution" aria-describedby="monthlyInvestmentContributionHelp monthlyInvestmentContributionAddon" value="550" min="0" step="10" required>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h4>Scenario Management</h4>
+                        <div class="mb-3">
+                            <label for="scenarioName" class="form-label">Scenario Name</label>
+                            <input type="text" class="form-control" id="scenarioName" placeholder="e.g., Conservative Estimate, High Growth, etc." maxlength="50">
+                            <small class="form-text text-muted">Give this scenario a memorable name</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="scenarioNotes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="scenarioNotes" rows="2" placeholder="Add any notes about this scenario..." maxlength="200"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="savedScenarios" class="form-label">Saved Scenarios</label>
+                            <select class="form-select" id="savedScenarios">
+                                <option value="">-- No saved scenarios --</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-success" id="saveScenarioBtn">Save Current Scenario</button>
+                            <button type="button" class="btn btn-info" id="loadScenarioBtn" disabled>Load Selected Scenario</button>
+                            <button type="button" class="btn btn-warning" id="deleteScenarioBtn" disabled>Delete Selected Scenario</button>
+                            <button type="button" class="btn btn-outline-primary" id="showComparisonBtn" disabled>Compare Scenarios</button>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Calculate</button>
+                            <button type="button" class="btn btn-secondary" id="exportCsvBtn">Export to CSV</button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearDataBtn">Clear Saved Data</button>
+                        </div>
+                    </div>
+
+                    <!-- Tax Configuration Section -->
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Tax Configuration</h3>
+                        <div class="mb-3">
+                            <label for="filingStatus" class="form-label">Filing Status</label>
+                            <select class="form-select" id="filingStatus">
+                                <option value="single">Single</option>
+                                <option value="joint">Married Filing Jointly</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stateIncomeTaxRate" class="form-label">State Income Tax Rate</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="stateIncomeTaxRate" value="5" min="0" max="15" step="0.1">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="form-text text-muted">Enter your state's income tax rate (0 for states with no income tax)</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="itemizeDeductions" class="form-check-input">
+                            <label for="itemizeDeductions" class="form-check-label">Itemize Deductions</label>
+                            <small class="form-text text-muted">Check if you plan to itemize (vs. standard deduction)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="otherDeductions" class="form-label">Other Annual Deductions</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="otherDeductions" value="0" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">Charitable contributions, medical expenses, etc.</small>
+                        </div>
+                    </div>
+
+                    <!-- Healthcare Configuration Section -->
+                    <div class="col-sm-12 col-md-6 col-lg-3">
+                        <h3>Healthcare Costs</h3>
+                        <h6 class="text-muted">Pre-Medicare (Before Age 65)</h6>
+
+                        <div class="mb-3">
+                            <label for="preMedicareMonthlyPremium" class="form-label">Monthly Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="preMedicareMonthlyPremium" value="800" min="0" step="50">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="preMedicareAnnualOutOfPocket" class="form-label">Annual Out-of-Pocket</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="preMedicareAnnualOutOfPocket" value="3000" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">Deductibles, copays, prescriptions</small>
+                        </div>
+
+                        <h6 class="text-muted mt-3">Medicare (Age 65+)</h6>
+
+                        <div class="mb-3">
+                            <label for="medicarePartBPremium" class="form-label">Medicare Part B Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medicarePartBPremium" value="174.70" min="0" step="0.01">
+                            </div>
+                            <small class="form-text text-muted">Monthly, 2024 standard: $174.70</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="medigapPremium" class="form-label">Medigap/Supplemental Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medigapPremium" value="200" min="0" step="10">
+                            </div>
+                            <small class="form-text text-muted">Monthly supplemental insurance</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="medicareAnnualOutOfPocket" class="form-label">Annual Out-of-Pocket</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="medicareAnnualOutOfPocket" value="2000" min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted">With Medicare coverage</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="includeLongTermCare" class="form-check-input">
+                            <label for="includeLongTermCare" class="form-check-label">Include Long-Term Care Insurance</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="longTermCarePremium" class="form-label">Long-Term Care Premium</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="longTermCarePremium" value="250" min="0" step="10">
+                            </div>
+                            <small class="form-text text-muted">Monthly, if enabled</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <hr/>
+
+            <!-- Scenario Comparison Section -->
+            <div class="row mb-4" id="scenarioComparisonSection" style="display: none;">
+                <div class="col-12">
+                    <h2 class="text-center">Scenario Comparison</h2>
+                    <p class="text-center text-muted">Compare input parameters across different saved scenarios</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Select scenarios to compare (select 2-3):</label>
+                        <div id="comparisonCheckboxes" class="row">
+                            <!-- Checkboxes will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-primary" id="compareBtn" disabled>Compare Selected Scenarios</button>
+                        <button type="button" class="btn btn-secondary" id="closeComparisonBtn">Close Comparison</button>
+                    </div>
+
+                    <div id="comparisonResults" class="table-responsive" style="display: none;">
+                        <table class="table table-bordered table-hover" id="comparisonTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Parameter</th>
+                                    <!-- Scenario names will be added dynamically -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Comparison data will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+            <div class="row">
+                <h2 class="text-center">Data Tables</h2>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Total Costs</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="comparativeTotalCostsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparativeTotalCostsTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Per Month Costs</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="perMonthCostsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="perMonthCostsTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Per Month Investment Use</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="perMonthInvestmentUseTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="perMonthInvestmentUseTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Investments Values</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="investmentValueTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="investmentValueTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Cumulative Asset Values</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="comparativeAssetValuesTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparativeAssetValuesTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Net Positions</h3>
+                    <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="netPositionsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Age</th>
+                                <th scope="col">Rent</th>
+                                <th scope="col">15 Yr Loan</th>
+                                <th scope="col">30 Yr Loan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="netPositionsTableBody">
+
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+            <div class="row">
+                <h2 class="text-center">Graphs</h2>
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <h3>Total Costs</h3>
+                    <div id="totalCostsGraph"></div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <h3>Cumulative Asset Values</h3>
+                    <div id="totalAssetsGraph"></div>
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <h3>Net Positions</h3>
+                    <div id="netPositionsGraph"></div>
+                </div>
+            </div>
+        </div>
+        <script src="assets/bootstrap/bootstrap.bundle.js"></script>
+        <script src="assets/d3/d3.v7.js"></script>
+    </body>
+</html>

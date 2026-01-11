@@ -7,18 +7,18 @@
             <!-- Bootstrap 5.0.2 -->
         <link href="assets/bootstrap/bootstrap.css" rel="stylesheet">
 
-        <script src="./modules/utlities.js"></script>
-        <script src="./modules/housing.js"></script>
-        <script src="./modules/living.js"></script>
-        <script src="./modules/investments.js"></script>
-        <script src="main.js?v=2"></script>
+        <script type="module" src="./modules/utilities.js"></script>
+        <script type="module" src="./modules/housing.js"></script>
+        <script type="module" src="./modules/living.js"></script>
+        <script type="module" src="./modules/investments.js"></script>
+        <script type="module" src="main.js?v=3"></script>
 
         <title>Retirement Calculator</title>
     </head>
     <body>
         <div class="container-xl">
             <div class="row">
-                <h1 class="text-center">Retirement Calculator</h2>
+                <h1 class="text-center">Retirement Calculator</h1>
             </div>
             <hr/>
             <div class="row">
@@ -41,8 +41,8 @@
                 </ol>
 
                 <p>
-                    As a general rule when interpreting the results, if the Investment Value is positive, you still have money in the bank. If it is negative, but your Comulative Asset Value is positive,
-                    you have equity in your home, but no money in the bank. If both are negative, you are in debt. Net Positions is an indicator of how effecient different scenarios are at building intergenerational wealth (i.e., inheritance).
+                    As a general rule when interpreting the results, if the Investment Value is positive, you still have money in the bank. If it is negative, but your Cumulative Asset Value is positive,
+                    you have equity in your home, but no money in the bank. If both are negative, you are in debt. Net Positions is an indicator of how efficient different scenarios are at building intergenerational wealth (i.e., inheritance).
                 </p>
 
                 <p>
@@ -54,27 +54,30 @@
             <div class="row">
                 <h2 class="text-center">Starting Information</h2>
                 <form class="row" id="detailsForm">
-                    <div class="col-sm-3">
+                    <div class="col-sm-12 col-md-6 col-lg-3">
                         <h3>General Information</h3>
                         <div class="mb-3">
                             <label for="currentAge" class="form-label">Current Age</label>
-                            <input type="number" class="form-control" id="currentAge" aria-describedby="currentAgeHelp" value="60">
+                            <input type="number" class="form-control" id="currentAge" aria-describedby="currentAgeHelp" value="60" min="18" max="100" required>
+                            <div class="invalid-feedback">Please enter a valid age between 18 and 100.</div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="retirementAge" class="form-label">Retirement Age</label>
-                            <input type="number" class="form-control" id="retirementAge" aria-describedby="retirementAgeHelp" value="70">
+                            <input type="number" class="form-control" id="retirementAge" aria-describedby="retirementAgeHelp" value="70" min="18" max="100" required>
+                            <div class="invalid-feedback">Retirement age must be greater than current age.</div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="deathAge" class="form-label">Death Age</label>
-                            <input type="number" class="form-control" id="deathAge" aria-describedby="deathAge" value="95">
+                            <input type="number" class="form-control" id="deathAge" aria-describedby="deathAge" value="95" min="18" max="120" required>
+                            <div class="invalid-feedback">Death age must be greater than retirement age.</div>
                         </div>
                         
                         <div class="mb-3">
                             <label for="averageInflation" class="form-label">Average Inflation</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="averageInflation" aria-describedby="averageInflationHelp averageInflationAddon" value="3">
+                                <input type="number" class="form-control" id="averageInflation" aria-describedby="averageInflationHelp averageInflationAddon" value="3" min="0" max="50" step="0.1" required>
                                 <span class="input-group-text" id="averageInflationAddon">%</span>
                             </div>
                             <div id="averageInflationHelp" class="form-text">What do you expect the average inflation to be until retirement? 3% is a safe assumption.</div>
@@ -84,16 +87,16 @@
                             <label for="monthlySocialSecurity" class="form-label">Monthly Social Security</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="monthlySocialSecurityAddon">$</span>
-                                <input type="number" class="form-control" id="monthlySocialSecurity" aria-describedby="monthlySocialSecurityHelp monthlySocialSecurityAddon" value="2000">
+                                <input type="number" class="form-control" id="monthlySocialSecurity" aria-describedby="monthlySocialSecurityHelp monthlySocialSecurityAddon" value="2000" min="0" step="1">
                             </div>
-                            <div id="monthlySocialSecurityHelp" class="form-text">What do you expect to recieve monthly from social security?</div>
+                            <div id="monthlySocialSecurityHelp" class="form-text">What do you expect to receive monthly from social security?</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="otherMonthlyRetirementSources" class="form-label">Other Monthly Retirement Income Sources</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="otherMonthlyRetirementSourcesAddon">$</span>
-                                <input type="number" class="form-control" id="otherMonthlyRetirementSources" aria-describedby="otherMonthlyRetirementSourcesHelp otherMonthlyRetirementSourcesAddon" value="0">
+                                <input type="number" class="form-control" id="otherMonthlyRetirementSources" aria-describedby="otherMonthlyRetirementSourcesHelp otherMonthlyRetirementSourcesAddon" value="0" min="0" step="1">
                             </div>
                             <div id="otherMonthlyRetirementSourcesHelp" class="form-text">Do you expect to have other sources of monthly income during retirement? (E.g., annuities, pensions, etc.)</div>
                         </div>
@@ -102,7 +105,7 @@
                             <label for="currentMonthlySpending" class="form-label">Current Monthly Spending</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="currentMonthlySpendingAddon">$</span>
-                                <input type="number" class="form-control" id="currentMonthlySpending" aria-describedby="currentMonthlySpendingHelp currentMonthlySpendingAddon" value="2000">
+                                <input type="number" class="form-control" id="currentMonthlySpending" aria-describedby="currentMonthlySpendingHelp currentMonthlySpendingAddon" value="2000" min="0" step="1" required>
                             </div>
                             <div id="currentMonthlySpendingHelp" class="form-text">What is your total average monthly expenditures excluding housing?</div>
                         </div>
@@ -111,19 +114,19 @@
                             <label for="expectedMonthlySpendingInRetirement" class="form-label">Expected Monthly Spending in Retirement</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="expectedMonthlySpendingInRetirementAddon">$</span>
-                                <input type="number" class="form-control" id="expectedMonthlySpendingInRetirement" aria-describedby="expectedMonthlySpendingInRetirementHelp expectedMonthlySpendingInRetirementAddon" value="2000">
+                                <input type="number" class="form-control" id="expectedMonthlySpendingInRetirement" aria-describedby="expectedMonthlySpendingInRetirementHelp expectedMonthlySpendingInRetirementAddon" value="2000" min="0" step="1" required>
                             </div>
-                            <div id="expectedMonthlySpendingInRetirementHelp" class="form-text">What do you expect your monthly expenditures to be during retirment? If you are not sure use the same value as  your currently spend.</div>
+                            <div id="expectedMonthlySpendingInRetirementHelp" class="form-text">What do you expect your monthly expenditures to be during retirement? If you are not sure use the same value as your current spending.</div>
                         </div>
                     </div>
 
-                    <div class="col-sm-3">
+                    <div class="col-sm-12 col-md-6 col-lg-3">
                         <h3>Renting Information</h3>
                         <div class="mb-3">
                             <label for="monthlyRent" class="form-label">Monthly Rent</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="monthlyRentAddon">$</span>
-                                <input type="number" class="form-control" id="monthlyRent" aria-describedby="monthlyRentHelp monthlyRentAddon" value="2000">
+                                <input type="number" class="form-control" id="monthlyRent" aria-describedby="monthlyRentHelp monthlyRentAddon" value="2000" min="0" step="1" required>
                             </div>
                             <div id="monthlyRentHelp" class="form-text">Insert your monthly rent.</div>
                         </div>
@@ -131,7 +134,7 @@
                         <div class="mb-3">
                             <label for="rentIncrease" class="form-label">Rent Increase</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="rentIncrease" aria-describedby="rentIncreaseHelp rentIncreaseAddon" value="3">
+                                <input type="number" class="form-control" id="rentIncrease" aria-describedby="rentIncreaseHelp rentIncreaseAddon" value="3" min="0" max="50" step="0.1" required>
                                 <span class="input-group-text" id="rentIncreaseAddon">%</span>
                             </div>
                         </div>
@@ -140,27 +143,27 @@
                             <label for="monthlyRentInsurance" class="form-label">Monthly Rental Insurance</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="monthlyRentInsuranceAddon">$</span>
-                                <input type="number" class="form-control" id="monthlyRentInsurance" aria-describedby="monthlyRentInsuranceHelp monthlyRentInsuranceAddon" value="10">
+                                <input type="number" class="form-control" id="monthlyRentInsurance" aria-describedby="monthlyRentInsuranceHelp monthlyRentInsuranceAddon" value="10" min="0" step="1">
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-sm-3">
+                    <div class="col-sm-12 col-md-6 col-lg-3">
                         <h3>Buying Information</h3>
                         <div class="mb-3">
                             <label for="mortgage" class="form-label">Mortgage</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="mortgageAddon">$</span>
-                                <input type="number" class="form-control" id="mortgage" aria-describedby="mortgageHelp mortgageAddon" value="300000">
+                                <input type="number" class="form-control" id="mortgage" aria-describedby="mortgageHelp mortgageAddon" value="300000" min="0" step="1000" required>
                             </div>
-                            <div id="mortageHelp" class="form-text">Insert your mortgage excluding down payment.</div>
+                            <div id="mortgageHelp" class="form-text">Insert your mortgage excluding down payment.</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="mortgageDownPayment" class="form-label">Mortgage Down Payment</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="mortgageDownPaymentAddon">$</span>
-                                <input type="number" class="form-control" id="mortgageDownPayment" aria-describedby="mortgageDownPaymentHelp mortgageDownPaymentAddon" value="20000">
+                                <input type="number" class="form-control" id="mortgageDownPayment" aria-describedby="mortgageDownPaymentHelp mortgageDownPaymentAddon" value="20000" min="0" step="1000" required>
                             </div>
                             <div id="mortgageDownPaymentHelp" class="form-text">Insert your down payment.</div>
                         </div>
@@ -168,7 +171,7 @@
                         <div class="mb-3">
                             <label for="mortgageRate" class="form-label">Mortgage Rate</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="mortgageRate" aria-describedby="mortgageRateHelp mortgageRateAddon" value="6">
+                                <input type="number" class="form-control" id="mortgageRate" aria-describedby="mortgageRateHelp mortgageRateAddon" value="6" min="0" max="30" step="0.01" required>
                                 <span class="input-group-text" id="mortgageRateAddon">%</span>
                             </div>
                         </div>
@@ -177,65 +180,65 @@
                             <label for="oneTimeRepairs" class="form-label">One Time Repairs</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="oneTimeRepairsAddon">$</span>
-                                <input type="number" class="form-control" id="oneTimeRepairs" aria-describedby="oneTimeRepairsHelp oneTimeRepairsAddon" value="10000">
+                                <input type="number" class="form-control" id="oneTimeRepairs" aria-describedby="oneTimeRepairsHelp oneTimeRepairsAddon" value="10000" min="0" step="100">
                             </div>
                             <div id="oneTimeRepairsHelp" class="form-text">How much do you expect the initial repairs of the home to cost.</div>
                         </div>
 
                         <div class="mb-3">
-                        <label for="annualTaxAssesment" class="form-label">Annual Tax Assesment</label>
+                        <label for="annualTaxAssessment" class="form-label">Annual Tax Assessment</label>
                             <div class="input-group">
-                                <span class="input-group-text" id="annualTaxAssesmentAddon">$</span>
-                                <input type="number" class="form-control" id="annualTaxAssesment" aria-describedby="annualTaxAssesmentHelp annualTaxAssesmentAddon" value="2000">
+                                <span class="input-group-text" id="annualTaxAssessmentAddon">$</span>
+                                <input type="number" class="form-control" id="annualTaxAssessment" aria-describedby="annualTaxAssessmentHelp annualTaxAssessmentAddon" value="2000" min="0" step="100" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="monthlyHomeInsurance" class="form-label">Monthly Home Insurance</label>
-                            <div class="input-group ">
+                            <div class="input-group">
                                 <span class="input-group-text" id="monthlyHomeInsuranceAddon">$</span>
-                                <input type="number" class="form-control" id="monthlyHomeInsurance" aria-describedby="monthlyHomeInsuranceHelp monthlyHomeInsuranceAddon" value="100">
+                                <input type="number" class="form-control" id="monthlyHomeInsurance" aria-describedby="monthlyHomeInsuranceHelp monthlyHomeInsuranceAddon" value="100" min="0" step="10" required>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="annualHomeMaintance" class="form-label">Annual Home Maintance</label>
+                            <label for="annualHomeMaintenance" class="form-label">Annual Home Maintenance</label>
                             <div class="input-group">
-                                <span class="input-group-text" id="annualHomeMaintanceAddon">$</span>
-                                <input type="number" class="form-control" id="annualHomeMaintance" aria-describedby="annualHomeMaintanceHelp annualHomeMaintanceAddon" value="7500">
+                                <span class="input-group-text" id="annualHomeMaintenanceAddon">$</span>
+                                <input type="number" class="form-control" id="annualHomeMaintenance" aria-describedby="annualHomeMaintenanceHelp annualHomeMaintenanceAddon" value="7500" min="0" step="100">
                             </div>
-                            <div id="annualHomeMaintanceHelp" class="form-text">Around 5% of home value is a decent estimate.</div>
+                            <div id="annualHomeMaintenanceHelp" class="form-text">Around 5% of home value is a decent estimate.</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="annualHomeValueAppreciation" class="form-label">Annual Home Value Appreciation</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="annualHomeValueAppreciation" aria-describedby="annualHomeValueAppreciationHelp annualHomeValueAppreciationAddon" value="6">
+                                <input type="number" class="form-control" id="annualHomeValueAppreciation" aria-describedby="annualHomeValueAppreciationHelp annualHomeValueAppreciationAddon" value="6" min="-50" max="50" step="0.1" required>
                                 <span class="input-group-text" id="annualHomeValueAppreciationAddon">%</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-sm-3">
+                    <div class="col-sm-12 col-md-6 col-lg-3">
                         <h3>Investments Information</h3>
                         <div class="mb-3">
-                            <label for="totalCurrentInvesments" class="form-label">Total Current Invesments</label>
+                            <label for="totalCurrentInvestments" class="form-label">Total Current Investments</label>
                             <div class="input-group">
-                                <span class="input-group-text" id="totalCurrentInvesmentsAddon">$</span>
-                                <input type="number" class="form-control" id="totalCurrentInvesments" aria-describedby="totalCurrentInvesmentsHelp totalCurrentInvesmentsAddon" value="100000">
+                                <span class="input-group-text" id="totalCurrentInvestmentsAddon">$</span>
+                                <input type="number" class="form-control" id="totalCurrentInvestments" aria-describedby="totalCurrentInvestmentsHelp totalCurrentInvestmentsAddon" value="100000" min="0" step="1000" required>
                             </div>
                         </div>
 
-                        <div class="form-check">
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="includeDownPayment" class="form-check-input" aria-describedby="includeDownPaymentHelp">
                             <label for="includeDownPayment" class="form-check-label">Include Down Payment</label>
-                            <input type="checkbox" id="includeDownPayment"class="form-check-input" aria-describedby="includeDownPaymentHelp" value="">
                             <div id="includeDownPaymentHelp" class="form-text">Check if you would like to include the theoretical down payment above as part of your investment total.</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="annualInvestmentAppreciation" class="form-label">Annual Investments Appreciation</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="annualInvestmentAppreciation" aria-describedby="annualHomeValueAppreciationHelp annualInvestmentAppreciationAddon" value="6">
+                                <input type="number" class="form-control" id="annualInvestmentAppreciation" aria-describedby="annualInvestmentAppreciationHelp annualInvestmentAppreciationAddon" value="6" min="-50" max="50" step="0.1" required>
                                 <span class="input-group-text" id="annualInvestmentAppreciationAddon">%</span>
                             </div>
                         </div>
@@ -244,19 +247,22 @@
                             <label for="monthlyInvestmentContribution" class="form-label">Monthly Investment Contribution</label>
                             <div class="input-group">
                                 <span class="input-group-text" id="monthlyInvestmentContributionAddon">$</span>
-                                <input type="number" class="form-control" id="monthlyInvestmentContribution" aria-describedby="monthlyInvestmentContributionHelp monthlyInvestmentContributionAddon" value="550">
+                                <input type="number" class="form-control" id="monthlyInvestmentContribution" aria-describedby="monthlyInvestmentContributionHelp monthlyInvestmentContributionAddon" value="550" min="0" step="10" required>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" on_click>Calculate</button>
+                        <button type="submit" class="btn btn-primary">Calculate</button>
+                        <button type="button" class="btn btn-secondary ms-2" id="exportCsvBtn">Export to CSV</button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" id="clearDataBtn">Clear Saved Data</button>
                     </div>
                 </form>
             </div>
             <hr/>
             <div class="row">
                 <h2 class="text-center">Data Tables</h2>
-                <div class="col-md-4">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                     <h3>Total Costs</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="comparativeTotalCostsTable">
                         <thead>
                             <tr>
@@ -270,9 +276,11 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                     <h3>Per Month Costs</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="perMonthCostsTable">
                         <thead>
                             <tr>
@@ -286,9 +294,11 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                     <h3>Per Month Investment Use</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="perMonthInvestmentUseTable">
                         <thead>
                             <tr>
@@ -302,11 +312,13 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
-                    <h3>Invesments Values</h3>
+                <div class="col-sm-12 col-md-6 col-lg-4">
+                    <h3>Investments Values</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="investmentValueTable">
                         <thead>
                             <tr>
@@ -320,9 +332,11 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                     <h3>Cumulative Asset Values</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="comparativeAssetValuesTable">
                         <thead>
                             <tr>
@@ -336,9 +350,11 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-12 col-md-6 col-lg-4">
                     <h3>Net Positions</h3>
+                    <div class="table-responsive">
                     <table class="table table-striped table-hover" id="netPositionsTable">
                         <thead>
                             <tr>
@@ -352,20 +368,21 @@
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             <hr/>
             <div class="row">
                 <h2 class="text-center">Graphs</h2>
-                <div class="col-md-6">
+                <div class="col-sm-12 col-md-12 col-lg-6">
                     <h3>Total Costs</h3>
                     <div id="totalCostsGraph"></div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-sm-12 col-md-12 col-lg-6">
                     <h3>Cumulative Asset Values</h3>
                     <div id="totalAssetsGraph"></div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-sm-12 col-md-12 col-lg-6">
                     <h3>Net Positions</h3>
                     <div id="netPositionsGraph"></div>
                 </div>
